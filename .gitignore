@@ -1,0 +1,6 @@
+/src/CE_locomotion/*.o
+/src/CE_locomotion/*.dat
+/src/CE_locomotion/main
+/src/CE_locomotion/tests
+/src/CE_locomotion/*.json
+__pycache__
