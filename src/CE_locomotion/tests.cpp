@@ -34,6 +34,8 @@ void testNervousSystem()
     double StimAmp = 1;
     const double StepSize = 0.005;
 
+    
+
     ofstream state_file("test_output/test.state.dat");
     ofstream output_file("test_output/test.output.dat");
 
@@ -56,7 +58,7 @@ void testNervousSystem()
         {
             double st = n.NeuronState(i);
             double ou = n.NeuronOutput(i);
-            std::cout << "  Neuron: " << i << ", state: " << st << ", output: " << ou << "" << std::endl;
+            std::cout << "  Neuron: " << i << " has state: " << st << ", output: " << ou << "" << std::endl;
 
             state_file << st << " ";
             output_file << ou << " ";
@@ -91,7 +93,7 @@ int main(int argc, const char *argv[])
 
     testNervousSystem();
 
-    std::cout << "Done!" << std::endl;
+    std::cout << "Done tests!" << std::endl;
 
     return 0;
 }

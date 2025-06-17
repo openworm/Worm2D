@@ -12,7 +12,7 @@ cd src/CE_locomotion/
 make clean
 make tests
 
-rm -rf test_output/*.dat
+rm test_output/*.dat
 ./tests
 
 make
