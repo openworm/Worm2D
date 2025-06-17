@@ -1,4 +1,4 @@
-PYTHON_CONFIG ?= python3.12-config
+PYTHON_CONFIG ?= python3-config
 
 
 #LIBS := $(shell $(PYTHON_CONFIG) --embed --libs)
