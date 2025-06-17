@@ -4,3 +4,4 @@
 /src/CE_locomotion/tests
 /src/CE_locomotion/*.json
 __pycache__
+/src/CE_locomotion/test_output/*.dat
