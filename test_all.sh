@@ -16,5 +16,6 @@ rm -rf test_output/*.dat
 ./tests
 
 make
+time ./main
 
 echo "Finished running Worm2D tests"
