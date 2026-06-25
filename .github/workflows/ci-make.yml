@@ -2,9 +2,9 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "main", "development", "experimental", "test*" ]
+    branches: [ "main", "development", "experimental", "test*", "feat*", "bug*" ]
   pull_request:
-    branches: [ "main", "development", "experimental", "test*" ]
+    branches: [ "main", "development", "experimental", "test*", "feat*", "bug*" ]
 
 jobs:
   build:
@@ -12,15 +12,15 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     strategy:
       fail-fast: false
-      matrix:        
-        runs-on: [ubuntu-latest, ubuntu-22.04, macos-latest, macos-14 ]
-        python-version: [ "3.10", "3.12" ]
+      matrix:
+        runs-on: [ubuntu-22.04, ubuntu-latest, macos-latest, macos-14 ]
+        python-version: [ "3.10", "3.12" ] # Note: 3.14 causes issues with Neuron 8.2.7
 
     steps:
-    - uses: actions/checkout@v4
-    
+    - uses: actions/checkout@v6
+
     - name: Set up Python  ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version:  ${{ matrix.python-version }}
 
@@ -34,22 +34,52 @@ jobs:
         macos-skip-brew-update: 'true' # default false
 
     - name: Install dependencies (Ubuntu)
-      run: sudo apt-get install -y nlohmann-json3-dev tree graphviz openjdk-11-jdk
+      run: sudo apt-get install -y nlohmann-json3-dev tree graphviz openjdk-11-jdk cmake
       if: ${{ contains(matrix.runs-on, 'ubuntu') }}
 
     - name: Install dependencies (macOS)
-      run: brew install nlohmann-json tree
+      run: brew install nlohmann-json tree cmake
       if: ${{ contains(matrix.runs-on, 'macos') }}
 
-  
+    - name: Build and install worm2d package (with C++ binaries)
+      env:
+        CMAKE_BUILD_PARALLEL_LEVEL: 4
+      run: |
+      
+        pip install setuptools==80 # needed for Neuron on py >=3.12
+
+        pip install -e .[dev] -v
+
+    - name: Run C++ unit tests
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=Release
+        cmake --build build --target worm2d_tests worm2d_tests2
+        ./build/tests
+
+    - name: Test C++/Python interactions
+      run: |
+        cd tests/test_files
+        ./test.sh
+        cd modelspec_api
+        ./test.sh
+
+    - name: Test Python command line script
+      run: |
+        python -m worm2d.run_main -R 1233 -p 6 --doEvol --outputFolderName exampleRun2  # Note: small population of 6 for quick runtime
 
     - name: Test using test_all.sh
       run: |
-        
-        ./test_all.sh # also generates neuroml
+        pip list
+
+        pip install scikit_build_core # Needed for building C++ extensions with scikit-build &  --no-build-isolation
+
+        export NEURON_HOME=$pythonLocation
+        env
+
+        ./test_all.sh 
 
 
-      
+
     - name: list generated files
       run: |
           ls -alth
