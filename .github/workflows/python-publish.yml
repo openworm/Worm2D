@@ -31,7 +31,6 @@ jobs:
     
     - name: Install dependencies (Ubuntu)
       run: sudo apt-get install -y nlohmann-json3-dev tree graphviz openjdk-11-jdk cmake
-      if: ${{ contains(matrix.runs-on, 'ubuntu') }}
 
     - name: Build package
       run: python -m build
