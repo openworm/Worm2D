@@ -21,23 +21,24 @@ jobs:
           set -e
           if command -v dnf >/dev/null 2>&1; then
             dnf install -y cmake java-11-openjdk-devel graphviz tree || true
+            # Add Python development libs required by CMake FindPython3 Development/Embed
+            dnf install -y python3-devel || true
             if ! dnf install -y nlohmann-json-devel; then
               dnf install -y nlohmann_json-devel || true
             fi
           elif command -v yum >/dev/null 2>&1; then
             yum install -y cmake java-11-openjdk-devel graphviz tree || true
+            yum install -y python3-devel || true
             if ! yum install -y nlohmann-json-devel; then
               yum install -y nlohmann_json-devel || true
             fi
           elif command -v apt-get >/dev/null 2>&1; then
-            apt-get update && apt-get install -y cmake openjdk-11-jdk graphviz tree nlohmann-json3-dev
+            apt-get update && apt-get install -y \
+              cmake openjdk-11-jdk graphviz tree nlohmann-json3-dev \
+              python3-dev
           else
             echo "No supported package manager found!" >&2
             exit 1
-          fi
-
-          if ! test -f /usr/include/nlohmann/json.hpp; then
-            echo "nlohmann/json.hpp not found; continuing because the project can fall back to a system/include search."
           fi
         CIBW_BEFORE_BUILD_LINUX: pip install --upgrade pip setuptools wheel cmake
 
