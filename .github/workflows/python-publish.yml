@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Build wheels
-      uses: pypa/cibuildwheel@v2
+      uses: pypa/cibuildwheel@v4.1.0
       env:
         CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
         CIBW_ARCHS_LINUX: x86_64
@@ -20,7 +20,7 @@ jobs:
           yum install -y cmake java-11-openjdk-devel graphviz tree ||
           apt-get install -y cmake openjdk-11-jdk graphviz tree
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: wheels
         path: ./wheelhouse/*.whl
@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
 
     - name: Set up Python
       uses: actions/setup-python@v6
@@ -47,7 +47,7 @@ jobs:
     - name: Build sdist
       run: python -m build --sdist
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v7
       with:
         name: sdist
         path: dist/*.tar.gz
@@ -59,7 +59,7 @@ jobs:
       id-token: write
 
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v8
       with:
         pattern: "*"
         path: dist/
