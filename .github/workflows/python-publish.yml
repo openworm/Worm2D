@@ -17,9 +17,17 @@ jobs:
       env:
         CIBW_BUILD: cp39-* cp310-* cp311-* cp312-* cp313-*
         CIBW_ARCHS_LINUX: x86_64
-        CIBW_BEFORE_ALL_LINUX: >
-          yum install -y cmake java-11-openjdk-devel graphviz tree nlohmann-json-devel ||
-          (apt-get update && apt-get install -y cmake openjdk-11-jdk graphviz tree nlohmann-json3-dev)
+        CIBW_BEFORE_ALL_LINUX: |
+          if command -v dnf >/dev/null 2>&1; then
+            dnf install -y cmake java-11-openjdk-devel graphviz tree nlohmann_json-devel
+          elif command -v yum >/dev/null 2>&1; then
+            yum install -y cmake java-11-openjdk-devel graphviz tree nlohmann_json-devel
+          elif command -v apt-get >/dev/null 2>&1; then
+            apt-get update && apt-get install -y cmake openjdk-11-jdk graphviz tree nlohmann-json3-dev
+          else
+            echo "No supported package manager found!" >&2
+            exit 1
+          fi
         CIBW_BEFORE_BUILD_LINUX: pip install --upgrade pip setuptools wheel cmake
 
     - uses: actions/upload-artifact@v7
