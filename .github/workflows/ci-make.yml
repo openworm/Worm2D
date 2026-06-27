@@ -34,11 +34,11 @@ jobs:
         macos-skip-brew-update: 'true' # default false
 
     - name: Install dependencies (Ubuntu)
-      run: sudo apt-get install -y nlohmann-json3-dev tree graphviz openjdk-11-jdk cmake
+      run: sudo apt-get install -y tree graphviz openjdk-11-jdk cmake
       if: ${{ contains(matrix.runs-on, 'ubuntu') }}
 
     - name: Install dependencies (macOS)
-      run: brew install nlohmann-json tree cmake
+      run: brew install tree cmake
       if: ${{ contains(matrix.runs-on, 'macos') }}
 
     - name: Build and install worm2d package (with C++ binaries)

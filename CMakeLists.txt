@@ -41,19 +41,9 @@ endif()
 message(STATUS "[worm2d] Python library rpath: ${PYTHON_LIB_RPATH}")
 
 # ---------------------------------------------------------------------------
-# Find nlohmann_json
+# nlohmann_json — bundled header-only library
 # ---------------------------------------------------------------------------
-find_package(nlohmann_json QUIET)
-if(NOT nlohmann_json_FOUND)
-    # Fallback: search common Homebrew/system paths
-    find_path(NLOHMANN_JSON_INCLUDE_DIR nlohmann/json.hpp
-        PATHS /opt/homebrew/include /usr/local/include /usr/include)
-    if(NOT NLOHMANN_JSON_INCLUDE_DIR)
-        message(FATAL_ERROR "*****************\nnlohmann/json.hpp not found! Install this via: brew install nlohmann-json OR apt-get install nlohmann-json3-dev\n************")
-    endif()
-else()
-    set(NLOHMANN_JSON_INCLUDE_DIR "")  # provided via target
-endif()
+set(NLOHMANN_JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src/cpp")
 
 # ---------------------------------------------------------------------------
 # Common compiler flags
@@ -121,9 +111,6 @@ macro(add_worm_binary TARGET_NAME SUBDIR)
         /opt/homebrew/lib
         ${PYTHON_LIB_RPATH}
     )
-    if(nlohmann_json_FOUND)
-        target_link_libraries(${TARGET_NAME} PRIVATE nlohmann_json::nlohmann_json)
-    endif()
     install(TARGETS ${TARGET_NAME}
         RUNTIME DESTINATION worm2d/bin/${SUBDIR}
     )
