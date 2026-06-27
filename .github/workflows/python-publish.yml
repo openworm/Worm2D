@@ -20,19 +20,24 @@ jobs:
         CIBW_BEFORE_ALL_LINUX: |
           set -e
           if command -v dnf >/dev/null 2>&1; then
-            dnf install -y cmake python3-devel
+            dnf install -y cmake python3-devel 
             dnf install -y java-11-openjdk-devel graphviz tree || true
           elif command -v yum >/dev/null 2>&1; then
-            yum install -y cmake python3-devel
+            yum install -y cmake python3-devel 
             yum install -y java-11-openjdk-devel graphviz tree || true
           elif command -v apt-get >/dev/null 2>&1; then
-            apt-get update && apt-get install -y \
-              cmake openjdk-11-jdk graphviz tree python3-dev
+            apt-get update && apt-get install -y cmake openjdk-11-jdk graphviz tree python3-devel 
           else
             echo "No supported package manager found!" >&2
             exit 1
           fi
-        CIBW_BEFORE_BUILD_LINUX: pip install --upgrade pip setuptools wheel cmake
+
+        CIBW_BEFORE_BUILD_LINUX: |
+          set -e
+          /opt/python/cp${CIBW_BUILD%%-*}/bin/python -m pip install --upgrade pip setuptools wheel cmake || true
+          if command -v manylinux-interpreters >/dev/null 2>&1; then
+            manylinux-interpreters ensure "${PYBIN}"
+          fi
 
     - uses: actions/upload-artifact@v7
       with:
