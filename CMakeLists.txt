@@ -24,21 +24,47 @@ add_compile_definitions(W2D_VERSION_FROM_CMAKE="${W2D_VERSION_STR}")
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 
 # ---------------------------------------------------------------------------
+# Python embedding support (optional — manylinux containers have no libpython)
+# When OFF, the NeuroML/doNML mode is unavailable but all other functionality
+# builds and runs normally.
+# ---------------------------------------------------------------------------
+option(PYTHON_EMBEDDING "Build C++ executables with Python embedding (required for doNML/NeuroML mode)" ON)
+
+if(PYTHON_EMBEDDING)
+    find_package(Python3 OPTIONAL_COMPONENTS Development.Embed)
+    if(Python3_Development.Embed_FOUND)
+        message(STATUS "[worm2d] Python embedding: enabled")
+    else()
+        message(WARNING "[worm2d] Python3 Development.Embed not found — disabling Python embedding (doNML mode unavailable)")
+        set(PYTHON_EMBEDDING OFF)
+    endif()
+endif()
+
+if(NOT PYTHON_EMBEDDING)
+    message(STATUS "[worm2d] Python embedding: disabled")
+    add_compile_definitions(WORM2D_NO_PYTHON_EMBEDDING)
+endif()
+
+# ---------------------------------------------------------------------------
 # Derive a reliable Python library directory for rpath embedding.
 # FindPython3 may leave Python3_LIBRARY_DIRS empty in conda/venv environments;
 # fall back to extracting the directory from the full library path or the
 # interpreter location so that @rpath/libpython resolves at runtime on macOS.
 # ---------------------------------------------------------------------------
-if(Python3_LIBRARY_DIRS)
-    set(PYTHON_LIB_RPATH ${Python3_LIBRARY_DIRS})
-elseif(Python3_LIBRARIES)
-    list(GET Python3_LIBRARIES 0 _py_first_lib)
-    get_filename_component(PYTHON_LIB_RPATH "${_py_first_lib}" DIRECTORY)
+if(PYTHON_EMBEDDING)
+    if(Python3_LIBRARY_DIRS)
+        set(PYTHON_LIB_RPATH ${Python3_LIBRARY_DIRS})
+    elseif(Python3_LIBRARIES)
+        list(GET Python3_LIBRARIES 0 _py_first_lib)
+        get_filename_component(PYTHON_LIB_RPATH "${_py_first_lib}" DIRECTORY)
+    else()
+        get_filename_component(_py_bin_dir "${Python3_EXECUTABLE}" DIRECTORY)
+        get_filename_component(PYTHON_LIB_RPATH "${_py_bin_dir}/../lib" ABSOLUTE)
+    endif()
+    message(STATUS "[worm2d] Python library rpath: ${PYTHON_LIB_RPATH}")
 else()
-    get_filename_component(_py_bin_dir "${Python3_EXECUTABLE}" DIRECTORY)
-    get_filename_component(PYTHON_LIB_RPATH "${_py_bin_dir}/../lib" ABSOLUTE)
+    set(PYTHON_LIB_RPATH "")
 endif()
-message(STATUS "[worm2d] Python library rpath: ${PYTHON_LIB_RPATH}")
 
 # ---------------------------------------------------------------------------
 # nlohmann_json — bundled header-only library
@@ -89,28 +115,38 @@ macro(add_worm_binary TARGET_NAME SUBDIR)
         ${NLOHMANN_JSON_INCLUDE_DIR}
         /opt/homebrew/include
     )
-    target_link_libraries(${TARGET_NAME} PRIVATE
-        Python3::Python
-        Threads::Threads
-        ${CMAKE_DL_LIBS}
-    )
-    # Use CMake's INSTALL_RPATH so the rpath survives install_name_tool rewriting
-    # at install time (raw -Wl,-rpath linker flags are stripped by CMake on macOS).
-    if(APPLE)
-        set_target_properties(${TARGET_NAME} PROPERTIES
-            INSTALL_RPATH "@loader_path;${PYTHON_LIB_RPATH}"
-            BUILD_WITH_INSTALL_RPATH TRUE
+    if(PYTHON_EMBEDDING)
+        target_link_libraries(${TARGET_NAME} PRIVATE
+            Python3::Python
+            Threads::Threads
+            ${CMAKE_DL_LIBS}
+        )
+        # Use CMake's INSTALL_RPATH so the rpath survives install_name_tool rewriting
+        # at install time (raw -Wl,-rpath linker flags are stripped by CMake on macOS).
+        if(APPLE)
+            set_target_properties(${TARGET_NAME} PROPERTIES
+                INSTALL_RPATH "@loader_path;${PYTHON_LIB_RPATH}"
+                BUILD_WITH_INSTALL_RPATH TRUE
+            )
+        else()
+            set_target_properties(${TARGET_NAME} PROPERTIES
+                INSTALL_RPATH "${PYTHON_LIB_RPATH}"
+                BUILD_WITH_INSTALL_RPATH TRUE
+            )
+        endif()
+        target_link_directories(${TARGET_NAME} PRIVATE
+            /opt/homebrew/lib
+            ${PYTHON_LIB_RPATH}
         )
     else()
-        set_target_properties(${TARGET_NAME} PROPERTIES
-            INSTALL_RPATH "${PYTHON_LIB_RPATH}"
-            BUILD_WITH_INSTALL_RPATH TRUE
+        target_link_libraries(${TARGET_NAME} PRIVATE
+            Threads::Threads
+            ${CMAKE_DL_LIBS}
+        )
+        target_link_directories(${TARGET_NAME} PRIVATE
+            /opt/homebrew/lib
         )
     endif()
-    target_link_directories(${TARGET_NAME} PRIVATE
-        /opt/homebrew/lib
-        ${PYTHON_LIB_RPATH}
-    )
     install(TARGETS ${TARGET_NAME}
         RUNTIME DESTINATION worm2d/bin/${SUBDIR}
     )
@@ -172,8 +208,8 @@ target_include_directories(worm2d_tests2 PRIVATE
     ${NLOHMANN_JSON_INCLUDE_DIR}
     /opt/homebrew/include
 )
-target_link_libraries(worm2d_tests2 PRIVATE Python3::Python Threads::Threads ${CMAKE_DL_LIBS})
-target_link_directories(worm2d_tests2 PRIVATE /opt/homebrew/lib ${Python3_LIBRARY_DIRS})
+target_link_libraries(worm2d_tests2 PRIVATE Threads::Threads ${CMAKE_DL_LIBS})
+target_link_directories(worm2d_tests2 PRIVATE /opt/homebrew/lib)
 set_target_properties(worm2d_tests2 PROPERTIES OUTPUT_NAME tests2)
 
 # ---------------------------------------------------------------------------
