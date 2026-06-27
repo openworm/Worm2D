@@ -34,10 +34,7 @@ jobs:
 
         CIBW_BEFORE_BUILD_LINUX: |
           set -e
-          /opt/python/cp${CIBW_BUILD%%-*}/bin/python -m pip install --upgrade pip setuptools wheel cmake || true
-          if command -v manylinux-interpreters >/dev/null 2>&1; then
-            manylinux-interpreters ensure "${PYBIN}"
-          fi
+          python -m pip install --upgrade pip setuptools wheel cmake
 
     - uses: actions/upload-artifact@v7
       with:
