@@ -21,7 +21,7 @@ add_compile_definitions(W2D_VERSION_FROM_CMAKE="${W2D_VERSION_STR}")
 # ---------------------------------------------------------------------------
 # Find Python (for embedding)
 # ---------------------------------------------------------------------------
-find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module Development.Embed)
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development.Module)
 
 # ---------------------------------------------------------------------------
 # Derive a reliable Python library directory for rpath embedding.
