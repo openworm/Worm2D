@@ -127,3 +127,6 @@ __pycache__
 /src/worm2d/neuromlLocal/testc302SigSim/*.dat
 /src/worm2d/neuromlLocal/testc302SigSim/testc302NervousSystem
 /src/worm2d/neuromlLocal/testc302SigSim/report.txt
+/synchere.sh
+/wheelhouse
+/tests/test_files/test_py_cpp
